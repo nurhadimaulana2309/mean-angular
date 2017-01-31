@@ -1,5 +1,7 @@
 var express = require('express');
 var router = express.Router();
+var mongoose = require('mongoose');
+var Post = mongoose.model('Post');
 
 //
 // create a new middleware or function to check whether user is logged in or not
@@ -38,11 +40,26 @@ router.use('/posts', isAuthenticated);
 router.route('/posts')
 
   .get(function(req, res){
-    res.send('TODO display all posts');
+    Post.find(function(err, data){
+      if(err){
+        return res.send(500, err);
+      }
+
+      return res.json(data);
+    });
   })
 
   .post(function(req, res){
-    res.send('TODO create a new post');
+    var post = new Post();
+    post.text = req.body.text;
+    post.created_by = req.user._id;
+    post.save(function(err, data){
+      if(err){
+        return res.send(500, err);
+      }
+
+      return res.json(data);
+    });
   });
 
 //
@@ -53,15 +70,43 @@ router.route('/posts')
 router.route('/posts/:id')
 
   .get(function(req, res){
-    res.send('TODO display a specific post with id ' + req.params.id);
+    Post.findById(req.params.id, function(err, data){
+      if(err){
+        return res.send(err);
+      }
+
+      return res.json(data);
+    });
   })
 
   .put(function(req, res){
-    res.send('TODO update specific post with id ' + req.params.id);
+    //
+    // if we run findById on `mongo-shell` it will not work
+    //
+    Post.findById(req.params.id, function(err, data){
+      if(err){
+        return res.send(err);
+      }
+
+      data.text = req.body.text;
+      data.created_by = req.user._id;
+      data.save(function(err, data){
+        if(err){
+          return res.send(err);
+        }
+
+        return res.json(data);
+      });
+    });
   })
 
   .delete(function(req, res){
-    res.send('TODO delete specific post with id ' + req.params.id);
+    Post.remove({_id: req.params.id}, function(err, data){
+      if(err){
+        return res.send(err);
+      }
+      return res.json(data);
+    });
   });
 
 

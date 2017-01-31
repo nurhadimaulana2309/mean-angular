@@ -11,6 +11,15 @@ var passport = require('passport');
 var session = require('express-session');
 
 //
+// connect to mongodb
+// we have to install mongodb server too - 'sudo apt-get install mongodb-server'
+// it could be 'localhost:27017' or try '127.0.0.1' so problems may occurs
+//
+var mongoose = require('mongoose');
+mongoose.connect('mongodb://localhost/chrip-test');
+require('./models/models');
+
+//
 // load routes here
 //
 var index = require('./routes/index');
@@ -21,6 +30,10 @@ var api = require('./routes/api');
 //
 var authenticate = require('./routes/authenticate')(passport);
 
+///////////////////////////////////////////////////////////////////
+// Load Middleware
+///////////////////////////////////////////////////////////////////
+
 var app = express();
 
 // view engine setup
@@ -29,9 +42,6 @@ app.set('view engine', 'ejs');
 
 // uncomment after placing your favicon in /public
 //app.use(favicon(path.join(__dirname, 'public', 'favicon.ico')));
-//
-// [[middleware]]
-//
 app.use(logger('dev'));
 app.use(session({
   secret: 'keyboard cat',
@@ -54,6 +64,7 @@ initPassport(passport);
 app.use('/', index);
 app.use('/api', api);
 app.use('/authenticate', authenticate);
+
 
 // catch 404 and forward to error handler
 app.use(function(req, res, next) {

@@ -3,6 +3,9 @@
 //
 var LocalStrategy   = require('passport-local').Strategy;
 var bCrypt = require('bcrypt-nodejs');
+var mongoose = require('mongoose');
+var User = mongoose.model('User');
+var Post = mongoose.model('Post');
 
 //temporary data store
 var users = {};
@@ -13,8 +16,8 @@ module.exports = function(passport){
   // saved to session req.session.passport.user = {id:'..'}
   //
   passport.serializeUser(function(user, done) {
-    console.log('serializing user:',user.username);
-    return done(null, user.username);
+    console.log('serializing user:', user._id);
+    return done(null, user._id);
   });
 
   //
@@ -22,26 +25,40 @@ module.exports = function(passport){
   // if we use devise on ruby on rails it acts the same like we call current_user
   // but for this we get it from its request (req)
   //
-  passport.deserializeUser(function(username, done) {
-    return done(null, users[username]);
+  passport.deserializeUser(function(id, done) {
+    User.findById(id, function(err, data){
+      if(err){
+        return done(err, false);
+      }
+
+      if(!data){
+        return done('User not found', false);
+      }
+
+      return done(null, data);
+    });
   });
 
   passport.use('login', new LocalStrategy({
       passReqToCallback : true
     },
     function(req, username, password, done) {
-      if(!users[username]){
-        return done('User not found!', false);
-      }
 
-      if(!isValidPassword(users[username], password)){
-        return done('Invalid password!', false);
-      }
+      User.findOne({username: username}, function(err, data){
+        if(err){
+          return done(err, false);
+        }
 
-      //
-      // successfully logged in
-      //
-      return done(null, users[username]);
+        if(!data){
+          return done('User not found!', false);
+        }
+
+        if(!isValidPassword(data, password)){
+          return done('Invalid password!', false);
+        }
+
+        return done(null, data);
+      });
     }
   ));
 
@@ -49,19 +66,30 @@ module.exports = function(passport){
       passReqToCallback : true // allows us to pass back the entire request to the callback
     },
     function(req, username, password, done) {
-      if(users[username]){
-        return done('This username is already taken', false);
-      }
 
-      //
-      // add a new users to users hash - save to local memory
-      //
-      users[username] = {
-        username: username,
-        password: createHash(password)
-      }
+      User.findOne({username: username}, function(err, data){
+        if(err){
+          return done(err, false);
+        }
 
-      return done(null, users[username]);
+        if(data){
+          return done('username already taken', false);
+        }
+
+        var user = new User();
+        user.username = username;
+        user.password = createHash(password);
+        user.save(function(err, data){
+          if(err){
+            done(err, false);
+          }
+
+          console.log('user ' + user.username + ' successfully created!');
+          return done(null, user);
+        });
+
+      });
+
     })
   );
 
