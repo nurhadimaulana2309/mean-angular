@@ -52,7 +52,7 @@ router.route('/posts')
   .post(function(req, res){
     var post = new Post();
     post.text = req.body.text;
-    post.created_by = req.user._id;
+    post.created_by = req.body.created_by;
     post.save(function(err, data){
       if(err){
         return res.send(500, err);

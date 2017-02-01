@@ -8,7 +8,7 @@ var userSchema = mongoose.Schema({
 
 var postSchema = mongoose.Schema({
   text: String,
-  created_by: {type: mongoose.Schema.Types.ObjectId, ref: 'User'},
+  created_by: String,
   created_at: {type: Date, default: Date.now}
 });
 

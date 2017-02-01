@@ -31,7 +31,7 @@ module.exports = function(passport){
         return done(err, false);
       }
 
-      if(!data){
+      if(data == null){
         return done('User not found', false);
       }
 
@@ -46,15 +46,18 @@ module.exports = function(passport){
 
       User.findOne({username: username}, function(err, data){
         if(err){
-          return done(err, false);
+          console.log('an error occured' + err);
+          return done(null, false);
         }
 
-        if(!data){
-          return done('User not found!', false);
+        if(data == null){
+          console.log('username ' + username + ' is not found!');
+          return done(null, false);
         }
 
         if(!isValidPassword(data, password)){
-          return done('Invalid password!', false);
+          console.log('incorrect password!');
+          return done(null, false);
         }
 
         return done(null, data);
@@ -69,11 +72,13 @@ module.exports = function(passport){
 
       User.findOne({username: username}, function(err, data){
         if(err){
-          return done(err, false);
+          console.log('an error occured ' + err)
+          return done(null, false);
         }
 
         if(data){
-          return done('username already taken', false);
+          console.log('username already taken!');
+          return done(null, false);
         }
 
         var user = new User();
@@ -81,7 +86,8 @@ module.exports = function(passport){
         user.password = createHash(password);
         user.save(function(err, data){
           if(err){
-            done(err, false);
+            console.log('an error occured ' + err)
+            return done(null, false);
           }
 
           console.log('user ' + user.username + ' successfully created!');
